@@ -102,6 +102,13 @@ class Game:
                     self.board[(i-len(move_values)):i, j] = move_values
 
 
+class Env:
+
+    def __init__(self, number_tiles: int = 4, max_steps: int = 100):
+        self.game = Game(number_tiles=number_tiles)
+        self.max_steps = max_steps
+
+
 if __name__ == "__main__":
     board = Game(4)
     print(board.board)
