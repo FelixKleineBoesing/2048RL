@@ -34,7 +34,7 @@ class Agent(abc.ABC):
         :return:
         """
         decision = self.decision(state_space)
-        assert isinstance(decision, np.ndarray), "decision return must be a numpy array"
+        assert isinstance(decision, int), "decision return must be an integer"
         self.number_decisions += 1
         return decision
 
@@ -78,3 +78,4 @@ class Agent(abc.ABC):
         :return: int: Action
         """
         pass
+

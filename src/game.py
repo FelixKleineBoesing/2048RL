@@ -1,8 +1,9 @@
 from math import log
-
+import pandas as pd
 import numpy as np
-
+import logging
 from src.agents.agent import Agent
+from src.agents.random import RandomAgent
 from src.helpers import Direction
 
 
@@ -101,20 +102,26 @@ class Game:
 
 class Env:
 
-    def __init__(self, agent: Agent, number_tiles: int = 4, max_steps_per_game: int = 500, max_value: int = 8192,
-                 ):
-        self._init_game()
+    def __init__(self, number_tiles: int = 4, max_steps_per_game: int = 500, max_value: int = 8192,
+                 flattened_state: bool = False):
         self.max_steps_per_game = max_steps_per_game
         self.number_tiles = number_tiles
         self.max_value = max_value
-        self.number_powers = int(log(8192, 2))
+        self.number_powers = int(log(8192, 2)) + 1
+        self.possible_numbers = [0] + [2 ** i for i in range(1, self.number_powers)]
+        self.agent = None
+        self.point_histoy = []
+        self.flattened_state = flattened_state
+        self._init_game()
+
+    def assign_agent(self, agent: Agent):
         self.agent = agent
 
     def _init_game(self):
         self.game = Game(number_tiles=self.number_tiles)
 
     def get_action_space(self):
-        return (self.number_tiles, )
+        return (4, )
 
     def get_state_space(self):
         return (self.number_tiles ** 2 * self.number_powers, )
@@ -135,27 +142,44 @@ class Env:
         return points_after - points_before, action, self.game.board, is_finished
 
     def run(self):
+        if self.agent is None:
+            raise ValueError("Agent must be assigned first")
         finished = False
         while not finished:
             s = self.game.board
             action = self.agent.play_turn(s)
-            reward, state, action, is_finished = self.do_action(action)
+            reward, action, state, is_finished = self.do_action(action)
+            if self.flattened_state:
+                state = state.reshape((self.number_tiles * self.number_tiles, ))
+                state = self._get_dummies(state)
+                state = state.reshape(self.number_tiles*self.number_tiles*self.number_powers)
             if is_finished:
-                finished = True
+                self.point_histoy.append(self.game.points)
                 break
 
-            self.agent.get_feedback(state=state, action, reward, is_finished)
-            last_action = action
-            last_state = state
+            self.agent.get_feedback(state=state, action=action, reward=reward, finished=is_finished)
 
+    def _get_dummies(self, state):
+        data = np.zeros((self.number_tiles * self.number_tiles, self.number_powers))
+        for i, val in enumerate(self.possible_numbers):
+            data[:, i] = state == val
+        return data
 
+    def run_multiple_games(self, number_games: int):
+        for game in range(number_games):
+            logging.info(f"Running Game Number: {game}")
+            self._init_game()
+            self.run()
 
 
 if __name__ == "__main__":
-    board = Game(4)
-    print(board.board)
-    print(board.points)
-    board.make_move(Direction.DOWN)
-    print(board.board)
-    print(board.points)
-    board.make_move(Direction.DOWN)
+    env = Env()
+    action_space = env.get_action_space()
+    state_space = env.get_state_space()
+    agent = RandomAgent(state_shape=state_space, action_shape=action_space, name="RandomAgent")
+    env.assign_agent(agent)
+    env.run_multiple_games(1000)
+    print(sum(env.point_histoy) / len(env.point_histoy))
+    print(min(env.point_histoy))
+    print(max(env.point_histoy))
+    
