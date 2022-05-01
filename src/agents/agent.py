@@ -16,7 +16,7 @@ class Agent(abc.ABC):
         self.name = name
         self.state_shape = state_shape
         self.action_shape = action_shape
-        self.number_turns = 0
+        self.number_decisions = 0
         self.td_loss_history = []
         self.moving_average_loss = []
         self.reward_history = []
@@ -37,7 +37,7 @@ class Agent(abc.ABC):
         """
         decision = self.decision(state_space)
         assert isinstance(decision, np.ndarray), "decision return must be a numpy array"
-        self.number_turns += 1
+        self.number_decisions += 1
         return decision
 
     def get_feedback(self, state: np.ndarray, action: int, reward: float, next_state: np.ndarray, finished: bool):
@@ -78,7 +78,7 @@ class Agent(abc.ABC):
         this function must implement a decision based in the action_space and other delivered arguments
         return must be a dictionary with the following keys: "stone_id" and "move_index" which indicates
         the stone and move that should be executed
-        :param action_space:
+        :param state_space:
         :return: np.array(X_From, Y_From, X_To, Y_To)
         """
         pass
