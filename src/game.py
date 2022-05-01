@@ -2,7 +2,10 @@ from math import log
 import pandas as pd
 import numpy as np
 import logging
+import plotly.express as px
+
 from src.agents.agent import Agent
+from src.agents.naive_agent import UpLeftAgent
 from src.agents.random import RandomAgent
 from src.helpers import Direction
 
@@ -110,7 +113,7 @@ class Env:
         self.number_powers = int(log(8192, 2)) + 1
         self.possible_numbers = [0] + [2 ** i for i in range(1, self.number_powers)]
         self.agent = None
-        self.point_histoy = []
+        self.point_history = []
         self.flattened_state = flattened_state
         self._init_game()
 
@@ -154,7 +157,7 @@ class Env:
                 state = self._get_dummies(state)
                 state = state.reshape(self.number_tiles*self.number_tiles*self.number_powers)
             if is_finished:
-                self.point_histoy.append(self.game.points)
+                self.point_history.append(self.game.points)
                 break
 
             self.agent.get_feedback(state=state, action=action, reward=reward, finished=is_finished)
@@ -171,15 +174,7 @@ class Env:
             self._init_game()
             self.run()
 
-
-if __name__ == "__main__":
-    env = Env()
-    action_space = env.get_action_space()
-    state_space = env.get_state_space()
-    agent = RandomAgent(state_shape=state_space, action_shape=action_space, name="RandomAgent")
-    env.assign_agent(agent)
-    env.run_multiple_games(1000)
-    print(sum(env.point_histoy) / len(env.point_histoy))
-    print(min(env.point_histoy))
-    print(max(env.point_histoy))
+    def create_histogram_of_point_history(self):
+        fig = px.histogram(self.point_history)
+        fig.show()
     
