@@ -40,7 +40,7 @@ class Agent(abc.ABC):
         self.number_turns += 1
         return decision
 
-    def get_feedback(self, state: np.ndarray, action: int, reward: float, next_state: np.ndarray, finished: bool):
+    def get_feedback(self, state: np.ndarray, action: int, reward: float, finished: bool):
         """
         through this function the agent gets information about the last turn
         :param state:
@@ -57,16 +57,14 @@ class Agent(abc.ABC):
             self._episode_reward = 0
         else:
             self._episode_reward += reward
-        self._get_feedback_inner(state, action, reward, next_state, finished)
+        self._get_feedback_inner(state, action, reward, finished)
 
-    def _get_feedback_inner(self, state: np.ndarray, action: int, reward: float, next_state: np.ndarray,
-                            finished: bool):
+    def _get_feedback_inner(self, state: np.ndarray, action: int, reward: float, finished: bool):
         """
         implement this function if you want to gather informations about your game
         :param state:
         :param action:
         :param reward:
-        :param next_state:
         :param finished:
         :return:
         """
@@ -78,7 +76,7 @@ class Agent(abc.ABC):
         this function must implement a decision based in the action_space and other delivered arguments
         return must be a dictionary with the following keys: "stone_id" and "move_index" which indicates
         the stone and move that should be executed
-        :param action_space:
-        :return: np.array(X_From, Y_From, X_To, Y_To)
+        :param state_space:
+        :return: int: Action
         """
         pass

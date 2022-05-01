@@ -47,6 +47,7 @@ class Game:
             return "Game Over"
         if spawn_new:
             self._generate_tile_and_assign_to_board()
+        return "Success"
 
     def _get_empty_tiles(self):
         self._empty_tiles = {(i, j) for i in range(self.number_tiles)
@@ -118,23 +119,35 @@ class Env:
     def get_state_space(self):
         return (self.number_tiles ** 2 * self.number_powers, )
 
-    def do_action(self, action: int) -> (int, np.ndarray, np.ndarray):
+    def do_action(self, action: int) -> (int,  int, np.ndarray, bool):
         """
 
         :param action:
-        :return: Reward, Action, State
+        :return: Reward, Action, State, finished
         """
         points_before = self.game.points
-        self.game.make_move(direction=Direction(action))
+        status = self.game.make_move(direction=Direction(action))
+        if status == "Game Over":
+            is_finished = True
+        else:
+            is_finished = False
         points_after = self.game.points
-        return points_after - points_before, action, self.game.board
+        return points_after - points_before, action, self.game.board, is_finished
 
     def run(self):
         finished = False
         while not finished:
             s = self.game.board
             action = self.agent.play_turn(s)
-            reward, state, action = self.do_action(action)
+            reward, state, action, is_finished = self.do_action(action)
+            if is_finished:
+                finished = True
+                break
+
+            self.agent.get_feedback(state=state, action, reward, is_finished)
+            last_action = action
+            last_state = state
+
 
 
 
