@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
 
-from src.game import Game, Direction
+from src.game import Game
+from src.helpers import Direction
 
 
 class BoardTester(unittest.TestCase):

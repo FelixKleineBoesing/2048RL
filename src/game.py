@@ -1,13 +1,9 @@
-from enum import Enum
+from math import log
 
 import numpy as np
 
-
-class Direction(Enum):
-    UP = 1
-    DOWN = 2
-    LEFT = 3
-    RIGHT = 4
+from src.agents.agent import Agent
+from src.helpers import Direction
 
 
 class Game:
@@ -104,9 +100,42 @@ class Game:
 
 class Env:
 
-    def __init__(self, number_tiles: int = 4, max_steps: int = 100):
-        self.game = Game(number_tiles=number_tiles)
-        self.max_steps = max_steps
+    def __init__(self, agent: Agent, number_tiles: int = 4, max_steps_per_game: int = 500, max_value: int = 8192,
+                 ):
+        self._init_game()
+        self.max_steps_per_game = max_steps_per_game
+        self.number_tiles = number_tiles
+        self.max_value = max_value
+        self.number_powers = int(log(8192, 2))
+        self.agent = agent
+
+    def _init_game(self):
+        self.game = Game(number_tiles=self.number_tiles)
+
+    def get_action_space(self):
+        return (self.number_tiles, )
+
+    def get_state_space(self):
+        return (self.number_tiles ** 2 * self.number_powers, )
+
+    def do_action(self, action: int) -> (int, np.ndarray, np.ndarray):
+        """
+
+        :param action:
+        :return: Reward, Action, State
+        """
+        points_before = self.game.points
+        self.game.make_move(direction=Direction(action))
+        points_after = self.game.points
+        return points_after - points_before, action, self.game.board
+
+    def run(self):
+        finished = False
+        while not finished:
+            s = self.game.board
+            action = self.agent.play_turn(s)
+            reward, state, action = self.do_action(action)
+
 
 
 if __name__ == "__main__":
